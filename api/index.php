@@ -35,7 +35,10 @@
             <p style="font-size: 0.85rem; color: #a1a1aa;">Set up your Gemini API key to power the system.</p>
             <label>LLM (Gemini) API Key:</label>
             <input type="password" id="geminiKey" placeholder="AIzaSy...">
-            <button onclick="saveGeminiKey()">Save API Key</button>
+            <div style="display:flex; gap: 10px; margin-bottom: 1rem;">
+                <button onclick="saveGeminiKey()" style="margin-bottom: 0;">Save API Key</button>
+                <button onclick="openTrySandbox()" style="margin-bottom: 0; background: #555;" title="Open Gemini Sandbox to chat directly with the LLM">Open Sandbox</button>
+            </div>
             <div id="configStatus" style="color: #4caf50; font-size: 0.9rem;"></div>
         </div>
 
@@ -88,6 +91,15 @@ curl -X POST http://localhost:8000/api/check.php \
                 document.getElementById('bridgeKey').value = data.bridge_api_key;
                 document.getElementById('docBridgeKey').innerText = data.bridge_api_key;
             }
+        }
+
+        function openTrySandbox() {
+            const key = document.getElementById('geminiKey').value;
+            if (!key) {
+                alert("Please enter your Gemini API Key first.");
+                return;
+            }
+            window.open('/api/try.php?api_key=' + encodeURIComponent(key), '_blank');
         }
 
         async function saveGeminiKey() {

@@ -83,6 +83,13 @@
     </div>
 
     <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('api_key')) {
+                document.getElementById('apiKey').value = urlParams.get('api_key');
+            }
+        });
+
         let currentImageBase64 = null;
         let currentMimeType = null;
 
