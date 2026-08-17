@@ -17,8 +17,8 @@ $config = file_exists($configFile) ? json_decode(file_get_contents($configFile),
 $bridgeKey = $kvConfigured ? kv_get('bridge_api_key') : (getenv('BRIDGE_API_KEY') ?: (isset($config['bridge_api_key']) ? $config['bridge_api_key'] : ''));
 $geminiKey = $kvConfigured ? kv_get('gemini_api_key') : (getenv('GEMINI_API_KEY') ?: (isset($config['gemini_api_key']) ? $config['gemini_api_key'] : ''));
 
-$headers = getallheaders();
-$authHeader = isset($headers['Authorization']) ? $headers['Authorization'] : '';
+$headers = array_change_key_case(getallheaders(), CASE_UPPER);
+$authHeader = isset($headers['AUTHORIZATION']) ? $headers['AUTHORIZATION'] : (isset($_SERVER['HTTP_AUTHORIZATION']) ? $_SERVER['HTTP_AUTHORIZATION'] : '');
 
 if ($bridgeKey) {
     if ($authHeader !== 'Bearer ' . $bridgeKey) {
