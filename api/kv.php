@@ -2,8 +2,8 @@
 
 function get_kv_config() {
     return [
-        'url' => getenv('KV_REST_API_URL'),
-        'token' => getenv('KV_REST_API_TOKEN')
+        'url' => getenv('KV_REST_API_URL') ?: getenv('UPSTASH_REDIS_REST_URL'),
+        'token' => getenv('KV_REST_API_TOKEN') ?: getenv('UPSTASH_REDIS_REST_TOKEN')
     ];
 }
 
