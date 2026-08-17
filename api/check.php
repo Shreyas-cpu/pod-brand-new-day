@@ -166,14 +166,17 @@ $curlError = '';
 $usedModel = '';
 
 foreach ($models as $model) {
-    $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key=" . $geminiKey;
+    $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent";
 
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Fix for local Windows PHP
     curl_setopt($ch, CURLOPT_TIMEOUT, 15); // Don't hang for more than 15s per model
-    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        'Content-Type: application/json',
+        'x-goog-api-key: ' . $geminiKey
+    ]);
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
 
     $response = curl_exec($ch);
