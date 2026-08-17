@@ -23,7 +23,12 @@ $authHeader = isset($headers['AUTHORIZATION']) ? $headers['AUTHORIZATION'] : (is
 if ($bridgeKey) {
     if ($authHeader !== 'Bearer ' . $bridgeKey) {
         http_response_code(401);
-        echo json_encode(["error" => "Unauthorized. Invalid Bridge API Key."]);
+        echo json_encode([
+            "error" => "Unauthorized. Invalid Bridge API Key.",
+            "debug_authHeader" => $authHeader,
+            "debug_bridgeKey" => $bridgeKey,
+            "debug_SERVER_keys" => array_keys($_SERVER)
+        ]);
         exit;
     }
 } else {
