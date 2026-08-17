@@ -38,10 +38,10 @@
             <label>Select Model:</label>
             <select id="modelSelect">
                 <option value="auto">Auto Mode (Auto-shift on limits)</option>
-                <option value="gemini-3.5-flash-lite">Gemini 3.5 Flash Lite (Recommended)</option>
+                <option value="gemini-2.5-flash">Gemini 2.5 Flash (Recommended)</option>
+                <option value="gemini-3.5-flash-lite">Gemini 3.5 Flash Lite</option>
                 <option value="gemini-3.5-flash">Gemini 3.5 Flash</option>
-                <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
-                <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                <option value="gemini-flash-latest">Gemini Flash Latest</option>
             </select>
             <div style="display:flex; gap: 10px; margin-bottom: 1rem;">
                 <button onclick="saveGeminiKey()" style="margin-bottom: 0;">Save API Key</button>
