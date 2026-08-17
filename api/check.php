@@ -1,4 +1,6 @@
 <?php
+ini_set('display_errors', '0');
+error_reporting(0);
 header('Content-Type: application/json');
 require_once __DIR__ . '/kv.php';
 
@@ -52,7 +54,22 @@ if (!$imageUrl && !$imageBase64) {
 
 // 3. Download or parse Image
 if ($imageUrl) {
-    $imageBytes = @file_get_contents($imageUrl);
+    // If it's a Google Drive preview link, convert to direct download URL
+    if (preg_match('/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/', $imageUrl, $matches)) {
+        $imageUrl = 'https://drive.google.com/uc?export=download&id=' . $matches[1];
+    }
+    
+    $opts = [
+        "http" => [
+            "method" => "GET",
+            "header" => "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64)\r\n",
+            "follow_location" => 1,
+            "timeout" => 30
+        ]
+    ];
+    $context = stream_context_create($opts);
+    $imageBytes = @file_get_contents($imageUrl, false, $context);
+    
     if (!$imageBytes) {
         http_response_code(400);
         echo json_encode(["error" => "Failed to download image from provided URL"]);
@@ -132,7 +149,13 @@ $payload = [
     ]
 ];
 
-$models = ["gemini-3.5-flash-lite", "gemini-3.5-flash", "gemini-2.5-flash", "gemini-1.5-flash"];
+$models = [
+    "gemini-2.0-flash",
+    "gemini-1.5-flash",
+    "gemini-1.5-flash-8b",
+    "gemini-2.0-flash-lite",
+    "gemini-1.5-pro"
+];
 if ($requestedModel && $requestedModel !== 'auto') {
     array_unshift($models, $requestedModel);
     $models = array_unique($models);
