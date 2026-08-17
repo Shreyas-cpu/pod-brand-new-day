@@ -45,8 +45,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    if (!$kvConfigured) {
-        file_put_contents($configFile, json_encode($localData, JSON_PRETTY_PRINT));
+    if (!$kvConfigured && is_writable(dirname($configFile))) {
+        @file_put_contents($configFile, json_encode($localData, JSON_PRETTY_PRINT));
     }
     
     echo json_encode([

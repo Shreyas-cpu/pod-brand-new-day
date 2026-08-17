@@ -1,9 +1,17 @@
 <?php
 
+function get_env_var($key) {
+    $val = getenv($key);
+    if ($val !== false && $val !== '') return $val;
+    if (isset($_ENV[$key]) && $_ENV[$key] !== '') return $_ENV[$key];
+    if (isset($_SERVER[$key]) && $_SERVER[$key] !== '') return $_SERVER[$key];
+    return false;
+}
+
 function get_kv_config() {
     return [
-        'url' => getenv('KV_REST_API_URL') ?: getenv('UPSTASH_REDIS_REST_URL'),
-        'token' => getenv('KV_REST_API_TOKEN') ?: getenv('UPSTASH_REDIS_REST_TOKEN')
+        'url' => get_env_var('KV_REST_API_URL') ?: get_env_var('UPSTASH_REDIS_REST_URL'),
+        'token' => get_env_var('KV_REST_API_TOKEN') ?: get_env_var('UPSTASH_REDIS_REST_TOKEN')
     ];
 }
 
