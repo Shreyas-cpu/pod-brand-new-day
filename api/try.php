@@ -55,9 +55,9 @@
             <div style="flex: 1;">
                 <label>Select Model:</label>
                 <select id="modelSelect">
+                    <option value="gemini-3.5-flash-lite" selected>Gemini 3.5 Flash Lite (Default)</option>
                     <option value="auto">Auto Mode (Auto-shift on limits)</option>
-                    <option value="gemini-2.5-flash">Gemini 2.5 Flash (Recommended)</option>
-                    <option value="gemini-3.5-flash-lite">Gemini 3.5 Flash Lite</option>
+                    <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
                     <option value="gemini-3.5-flash">Gemini 3.5 Flash</option>
                     <option value="gemini-flash-latest">Gemini Flash Latest</option>
                 </select>
@@ -202,7 +202,7 @@
             sendBtn.innerText = '...';
 
             const modelsToTry = model === 'auto' 
-                ? ["gemini-2.5-flash", "gemini-3.5-flash-lite", "gemini-3.5-flash", "gemini-flash-latest"] 
+                ? ["gemini-3.5-flash-lite", "gemini-2.5-flash", "gemini-3.5-flash", "gemini-flash-latest"] 
                 : [model];
             
             let success = false;
