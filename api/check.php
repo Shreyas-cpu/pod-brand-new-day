@@ -42,6 +42,7 @@ $input = file_get_contents('php://input');
 $data = json_decode($input, true);
 $imageUrl = isset($data['image_url']) ? $data['image_url'] : null;
 $imageBase64 = isset($data['image_base64']) ? $data['image_base64'] : null;
+$requestedModel = isset($data['model']) ? $data['model'] : null;
 
 if (!$imageUrl && !$imageBase64) {
     http_response_code(400);
@@ -131,7 +132,11 @@ $payload = [
     ]
 ];
 
-$models = ["gemini-3.5-flash-lite", "gemini-2.5-flash", "gemini-1.5-flash"];
+$models = ["gemini-3.5-flash-lite", "gemini-3.5-flash", "gemini-2.5-flash", "gemini-1.5-flash"];
+if ($requestedModel && $requestedModel !== 'auto') {
+    array_unshift($models, $requestedModel);
+    $models = array_unique($models);
+}
 $response = false;
 $httpCode = 0;
 $curlError = '';
@@ -184,7 +189,8 @@ if ($resultData === null) {
 
 $output = [
     "status" => $statusText,
-    "image_url" => $imageUrl
+    "image_url" => $imageUrl,
+    "model_used" => $usedModel
 ];
 
 if ($debugInfo !== null) {

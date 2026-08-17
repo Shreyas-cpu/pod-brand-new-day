@@ -53,9 +53,11 @@
                 <input type="password" id="apiKey" placeholder="AIzaSy..." required>
             </div>
             <div style="flex: 1;">
-                <label>Select Lite Model:</label>
+                <label>Select Model:</label>
                 <select id="modelSelect">
+                    <option value="auto">Auto Mode (Auto-shift on limits)</option>
                     <option value="gemini-3.5-flash-lite">Gemini 3.5 Flash Lite (Recommended)</option>
+                    <option value="gemini-3.5-flash">Gemini 3.5 Flash</option>
                     <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
                     <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
                 </select>
@@ -83,10 +85,26 @@
     </div>
 
     <script>
-        document.addEventListener("DOMContentLoaded", () => {
+        document.addEventListener("DOMContentLoaded", async () => {
             const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.has('api_key')) {
-                document.getElementById('apiKey').value = urlParams.get('api_key');
+            let apiKey = urlParams.get('api_key');
+            let model = urlParams.get('model');
+            
+            if (!apiKey) {
+                try {
+                    const res = await fetch('/api/config.php');
+                    const data = await res.json();
+                    if (data.gemini_api_key) {
+                        apiKey = data.gemini_api_key;
+                    }
+                } catch(e) {}
+            }
+            
+            if (apiKey) {
+                document.getElementById('apiKey').value = apiKey;
+            }
+            if (model) {
+                document.getElementById('modelSelect').value = model;
             }
         });
 
@@ -183,27 +201,45 @@
             sendBtn.disabled = true;
             sendBtn.innerText = '...';
 
-            try {
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                
-                const data = await response.json();
-                
-                if (response.ok) {
-                    const reply = data.candidates[0].content.parts[0].text;
-                    appendMessage('bot', reply);
-                } else {
-                    appendMessage('bot', `**Error**: ${data.error ? data.error.message : JSON.stringify(data)}`);
+            const modelsToTry = model === 'auto' 
+                ? ["gemini-3.5-flash-lite", "gemini-3.5-flash", "gemini-2.5-flash", "gemini-1.5-flash"] 
+                : [model];
+            
+            let success = false;
+            let lastError = null;
+
+            for (const m of modelsToTry) {
+                try {
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${apiKey}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        const reply = data.candidates[0].content.parts[0].text;
+                        const prefix = model === 'auto' ? `*[Auto-selected ${m}]*\n\n` : '';
+                        appendMessage('bot', prefix + reply);
+                        success = true;
+                        break;
+                    } else {
+                        lastError = data.error ? data.error.message : JSON.stringify(data);
+                        console.warn(`${m} failed:`, lastError);
+                    }
+                } catch (err) {
+                    lastError = err.message;
+                    console.warn(`${m} network error:`, lastError);
                 }
-            } catch (err) {
-                appendMessage('bot', `**Network Error**: ${err.message}`);
-            } finally {
-                sendBtn.disabled = false;
-                sendBtn.innerText = 'Send';
             }
+            
+            if (!success) {
+                appendMessage('bot', `**Error**: All attempted models failed. Last error: ${lastError}`);
+            }
+
+            sendBtn.disabled = false;
+            sendBtn.innerText = 'Send';
         }
     </script>
 </body>

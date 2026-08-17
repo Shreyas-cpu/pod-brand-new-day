@@ -16,11 +16,11 @@
         }
         h2 { border-bottom: 1px solid #333; padding-bottom: 0.5rem; font-size: 1.2rem; margin-top: 0; }
         label { display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: #a1a1aa; }
-        input, button {
+        input, select, button {
             width: 100%; box-sizing: border-box; background: #2d2d2d; color: #fff;
             border: 1px solid #444; padding: 10px; border-radius: 4px; margin-bottom: 1rem;
         }
-        input:focus { outline: none; border-color: #66b3ff; }
+        input:focus, select:focus { outline: none; border-color: #66b3ff; }
         button { background: #2a5a8a; cursor: pointer; font-weight: bold; border: none; }
         button:hover { background: #316ba6; }
         pre, code { background: #121212 !important; border: 1px solid #333; padding: 1rem; border-radius: 4px; overflow-x: auto; color: #9cdcfe;}
@@ -35,9 +35,17 @@
             <p style="font-size: 0.85rem; color: #a1a1aa;">Set up your Gemini API key to power the system.</p>
             <label>LLM (Gemini) API Key:</label>
             <input type="password" id="geminiKey" placeholder="AIzaSy...">
+            <label>Select Model:</label>
+            <select id="modelSelect">
+                <option value="auto">Auto Mode (Auto-shift on limits)</option>
+                <option value="gemini-3.5-flash-lite">Gemini 3.5 Flash Lite (Recommended)</option>
+                <option value="gemini-3.5-flash">Gemini 3.5 Flash</option>
+                <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+            </select>
             <div style="display:flex; gap: 10px; margin-bottom: 1rem;">
                 <button onclick="saveGeminiKey()" style="margin-bottom: 0;">Save API Key</button>
-                <button onclick="openTrySandbox()" style="margin-bottom: 0; background: #555;" title="Open Gemini Sandbox to chat directly with the LLM">Open Sandbox</button>
+                <a id="sandboxLink" style="display:inline-block; padding: 10px; background: #555; color: #fff; text-decoration: none; border-radius: 4px; text-align: center; box-sizing: border-box; width: 100%; opacity: 0.5; pointer-events: none;" title="Open Gemini Sandbox to chat directly with the LLM" target="_blank">Open Sandbox</a>
             </div>
             <div id="configStatus" style="color: #4caf50; font-size: 0.9rem;"></div>
         </div>
@@ -56,7 +64,7 @@
             
             <label>API Usage Example:</label>
             <pre id="apiDocs">
-curl -X POST http://localhost:8000/api/check.php \
+curl -X POST <span id="docHost">http://localhost:8000</span>/api/check.php \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <span id="docBridgeKey">YOUR_BRIDGE_KEY</span>" \
   -d '{"image_url": "https://example.com/invoice.jpg"}'
@@ -84,22 +92,35 @@ curl -X POST http://localhost:8000/api/check.php \
 
     <script>
         async function loadConfig() {
+            document.getElementById('docHost').innerText = window.location.origin;
             const res = await fetch('/api/config.php');
             const data = await res.json();
-            if (data.gemini_api_key) document.getElementById('geminiKey').value = data.gemini_api_key;
+            if (data.gemini_api_key) {
+                document.getElementById('geminiKey').value = data.gemini_api_key;
+                updateSandboxLink();
+            }
             if (data.bridge_api_key) {
                 document.getElementById('bridgeKey').value = data.bridge_api_key;
                 document.getElementById('docBridgeKey').innerText = data.bridge_api_key;
             }
         }
 
-        function openTrySandbox() {
+        document.getElementById('geminiKey').addEventListener('input', updateSandboxLink);
+        document.getElementById('modelSelect').addEventListener('change', updateSandboxLink);
+
+        function updateSandboxLink() {
             const key = document.getElementById('geminiKey').value;
-            if (!key) {
-                alert("Please enter your Gemini API Key first.");
-                return;
+            const model = document.getElementById('modelSelect').value;
+            const link = document.getElementById('sandboxLink');
+            if (key) {
+                link.href = '/api/try.php?api_key=' + encodeURIComponent(key) + '&model=' + encodeURIComponent(model);
+                link.style.opacity = '1';
+                link.style.pointerEvents = 'auto';
+            } else {
+                link.removeAttribute('href');
+                link.style.opacity = '0.5';
+                link.style.pointerEvents = 'none';
             }
-            window.open('/api/try.php?api_key=' + encodeURIComponent(key), '_blank');
         }
 
         async function saveGeminiKey() {
@@ -154,7 +175,7 @@ curl -X POST http://localhost:8000/api/check.php \
                 return;
             }
 
-            let payload = {};
+            let payload = { model: document.getElementById('modelSelect').value };
             if (imageFile) {
                 try { payload.image_base64 = await toBase64(imageFile); }
                 catch (e) { resultDiv.innerText = "Error reading file."; return; }
